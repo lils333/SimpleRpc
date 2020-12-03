@@ -16,7 +16,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * 一致性hash算法，构建一个hash环，每一次请求，都会根据request的ID，去获取具体需要发送请求的位置
- * 主要是为了方便
+ * 主要是为了方便动态的添加提供服务的节点而是用，虽然性能不是最好的，但是实现不叫简单
  */
 @Slf4j
 public class KetamaChannel {
