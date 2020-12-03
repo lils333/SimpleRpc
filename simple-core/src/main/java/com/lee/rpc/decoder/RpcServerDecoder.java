@@ -27,8 +27,8 @@ import static com.lee.rpc.util.exception.ErrorType.*;
  * <p>
  * <p>
  * 实际情况如下:
- * 4         8           1          1     2            N bytes
- * serverId  requestId   methodId   type  bodyLength   bodyContent
+ * 4         8           1          1      2            N bytes
+ * serverId  requestId   methodId   type   bodyLength   bodyContent
  *
  * @author l46li
  */

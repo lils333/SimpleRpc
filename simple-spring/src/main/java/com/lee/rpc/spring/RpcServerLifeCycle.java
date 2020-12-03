@@ -13,7 +13,6 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.context.SmartLifecycle;
-import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 import java.net.InetAddress;
@@ -25,7 +24,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 /**
  * @author l46li
  */
-@Component
 @Slf4j
 public class RpcServerLifeCycle implements SmartLifecycle, BeanPostProcessor {
 
