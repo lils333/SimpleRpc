@@ -101,7 +101,7 @@ public class RpcServerGenerator {
             ctMethod.setBody(rpcServer.toString());
             serverDecoder.addMethod(ctMethod);
 
-            serverDecoder.writeFile("/home/lee");
+            //serverDecoder.writeFile("/home/lee");
 
             @SuppressWarnings("unchecked")
             Class<ChannelHandler> channelClass = (Class<ChannelHandler>) serverDecoder.toClass(
@@ -177,7 +177,7 @@ public class RpcServerGenerator {
                 rpcUnit.addMethod(invoker);
             }
 
-            rpcUnit.writeFile("/home/lee");
+            //rpcUnit.writeFile("/home/lee");
 
             RpcMethodUnit unit = (RpcMethodUnit) rpcUnit.toClass().getConstructor(inter).newInstance(instance);
 

@@ -104,7 +104,7 @@ public class RpcClientGenerator {
             ctMethod.setBody(sb.toString());
             clientDecoder.addMethod(ctMethod);
 
-            clientDecoder.writeFile("/home/lee");
+            //clientDecoder.writeFile("/home/lee");
 
             @SuppressWarnings("unchecked")
             Class<ChannelHandler> newDecoder = (Class<ChannelHandler>) clientDecoder.toClass(
@@ -201,7 +201,7 @@ public class RpcClientGenerator {
             ctMethod.setBody(rpcClient.toString());
             clientDecoder.addMethod(ctMethod);
 
-            clientDecoder.writeFile("/home/lee");
+            //clientDecoder.writeFile("/home/lee");
 
             @SuppressWarnings("unchecked")
             Class<ChannelHandler> newDecoder = (Class<ChannelHandler>) clientDecoder.toClass(
@@ -300,7 +300,7 @@ public class RpcClientGenerator {
                     }
                 }
 
-                rpcClient.writeFile("/home/lee");
+               // rpcClient.writeFile("/home/lee");
 
                 Class<?> target = rpcClient.toClass();
                 Object instance = target.getConstructor(clientProxy.getClass()).newInstance(clientProxy);
