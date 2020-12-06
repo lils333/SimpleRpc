@@ -3,7 +3,7 @@ package com.lee.rpc.sample;
 import com.lee.rpc.annotation.RpcClient;
 import com.lee.rpc.annotation.RpcMethod;
 
-@RpcClient(location = "simple://127.0.0.1:8080", service = "helloworld")
+@RpcClient(location = "simple://192.168.1.105:8080", service = "helloworld")
 public interface HelloWorldClient {
 
     @RpcMethod

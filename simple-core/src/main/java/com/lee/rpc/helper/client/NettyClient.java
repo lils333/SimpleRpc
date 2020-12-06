@@ -81,11 +81,9 @@ class NettyClient {
             bootstrap.handler(new ChannelInitializer<SocketChannel>() {
                 @Override
                 public void initChannel(SocketChannel ch) {
-                    // 20 -- 76428
-                    // 50 -- 71108
                     ch.pipeline().addLast(
                             new FlushConsolidationHandler(
-                                    50, true
+                                    20, true
                             )
                     );
                     ch.pipeline().addLast(

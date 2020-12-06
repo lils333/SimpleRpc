@@ -4,7 +4,7 @@ import com.lee.rpc.annotation.RpcMethod;
 import com.lee.rpc.annotation.RpcServer;
 import com.lee.rpc.helper.Weight;
 
-@RpcServer(publish = "127.0.0.1:8080", service = "helloworld", weight = Weight.ONE)
+@RpcServer(publish = "192.168.1.105:8080", service = "helloworld", weight = Weight.ONE)
 public interface HelloWorld {
 
     @RpcMethod(minThread = 4, maxThread = 4)

@@ -31,13 +31,13 @@ public class NettyServer {
 
     private final ThreadFactory acceptorThreadFactory = new BasicThreadFactory.Builder()
             .daemon(false)
-            .namingPattern("Acceptor-%d")
+            .namingPattern("acceptor-%d")
             .priority(Thread.NORM_PRIORITY)
             .build();
 
     private final ThreadFactory workerThreadFactory = new BasicThreadFactory.Builder()
             .daemon(false)
-            .namingPattern("Worker-%d")
+            .namingPattern("io-thread-%d")
             .priority(Thread.NORM_PRIORITY)
             .build();
 
@@ -72,7 +72,7 @@ public class NettyServer {
             @Override
             protected void initChannel(SocketChannel ch) {
                 ch.pipeline().addLast(
-                        new FlushConsolidationHandler(30, true)
+                        new FlushConsolidationHandler(20, true)
                 );
                 ch.pipeline().addLast(
                         new IdleStateHandler(0, 0, 200)

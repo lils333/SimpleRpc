@@ -22,7 +22,7 @@ public class HelloWorldClientTest {
 
             System.out.println("processors : " + processors);
 
-//            client.sayHello(createUser(1));
+            System.out.println(client.sayHello(createUser(1)));
 
             for (int j = 0; j < 50; j++) {
                 new Thread(new Runnable() {
