@@ -60,6 +60,7 @@ public class KetamaChannel {
     public Channel getChannel(long channelId) {
         channelId = mapping(channelId);
         final Channel rv;
+
         //key的hash值没有和hash环上面的salt对应，这个时候就顺时针获取离该hash最近的salt
         if (!channels.containsKey(channelId)) {
             SortedMap<Long, Channel> tailMap = channels.tailMap(channelId);
@@ -71,6 +72,7 @@ public class KetamaChannel {
                 channelId = tailMap.firstKey();
             }
         }
+
         //如果计算出来的hash刚好就是这个salt对应的Channel，那么直接返回
         rv = channels.get(channelId);
         return rv;
