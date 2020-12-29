@@ -51,6 +51,11 @@ public class SnowFlakeIdGenerator {
         this.workCenter = workCenter << 10;
     }
 
+    /**
+     * 不需要加 锁，用了threadlocal，每一个线程都有自己的SnowFlakeIdGenerator，所以默认就线程安全了
+     *
+     * @return 一个long类型的ID占用8个字节
+     */
     public long generatorKey() {
         long currentTime = System.currentTimeMillis();
         if (currentTime < dateTime) {

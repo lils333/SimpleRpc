@@ -49,17 +49,11 @@ public class RpcClientGenerator {
             );
             clientDecoder.setSuperclass(pool.get(RpcClientDecoder.class.getName()));
 
-            CtField clienetUintField = new CtField(
+            CtField clientUintField = new CtField(
                     pool.get(RpcServiceClientUnit.class.getName()), "clientUnit", clientDecoder
             );
-            clienetUintField.setModifiers(Modifier.PRIVATE);
-            clientDecoder.addField(clienetUintField);
-
-//            CtField clientProxyFiled = new CtField(
-//                    pool.get(ClientProxy.class.getName()), "clientProxy", clientDecoder
-//            );
-//            clientProxyFiled.setModifiers(Modifier.PRIVATE);
-//            clientDecoder.addField(clientProxyFiled);
+            clientUintField.setModifiers(Modifier.PRIVATE);
+            clientDecoder.addField(clientUintField);
 
             CtConstructor cons = new CtConstructor(
                     new CtClass[]{pool.get(InetSocketAddress.class.getName()), pool.get(ClientProxy.class.getName()),
@@ -104,7 +98,7 @@ public class RpcClientGenerator {
             ctMethod.setBody(sb.toString());
             clientDecoder.addMethod(ctMethod);
 
-            //clientDecoder.writeFile("/home/lee");
+            clientDecoder.writeFile("/home/lee");
 
             @SuppressWarnings("unchecked")
             Class<ChannelHandler> newDecoder = (Class<ChannelHandler>) clientDecoder.toClass(
@@ -201,7 +195,7 @@ public class RpcClientGenerator {
             ctMethod.setBody(rpcClient.toString());
             clientDecoder.addMethod(ctMethod);
 
-            //clientDecoder.writeFile("/home/lee");
+            clientDecoder.writeFile("/home/lee");
 
             @SuppressWarnings("unchecked")
             Class<ChannelHandler> newDecoder = (Class<ChannelHandler>) clientDecoder.toClass(
@@ -252,38 +246,29 @@ public class RpcClientGenerator {
                         returnType = CtClass.voidType;
                     }
                     if (parameterTypes.length <= 1) {
-                        RpcMethod rpcMethod = method.getDeclaredAnnotation(RpcMethod.class);
-                        if (rpcMethod != null) {
-                            RpcMethodUnit methodUnit = findMatchedRpcMethodUnit(method, rpcClientUnit);
-                            if (methodUnit != null) {
-                                generateRpcServiceClient(
-                                        pool, returnType, method, methodUnit, rpcClient, serviceId
-                                );
-                            } else {
-                                CtMethod notMatchedMethod = new CtMethod(returnType, method.getName(),
-                                        parameterTypes.length <= 0 ? null :
-                                                new CtClass[]{pool.get(parameterTypes[0].getName())}, rpcClient
-                                );
-                                notMatchedMethod.setModifiers(Modifier.PUBLIC);
-                                notMatchedMethod.setBody(
-                                        "{throw new UnsupportedOperationException(" +
-                                                "\"Not support method with @RpcMethod," +
-                                                " but metadata not find\");}"
-                                );
-                                rpcClient.addMethod(notMatchedMethod);
-                            }
+                        //默认只要是在这个接口里面的所有方法，那么都作为RpcMethod方法来使用
+                        RpcMethodUnit methodUnit = findMatchedRpcMethodUnit(method, rpcClientUnit);
+                        if (methodUnit != null) {
+                            generateRpcServiceClient(
+                                    pool, returnType, method, methodUnit, rpcClient, serviceId
+                            );
                         } else {
+                            //没有找到符合metadata要求的方法，那么直接给该方法生成一个不支持的操作，也就是直接抛出一个错误
                             CtMethod notMatchedMethod = new CtMethod(returnType, method.getName(),
                                     parameterTypes.length <= 0 ? null :
                                             new CtClass[]{pool.get(parameterTypes[0].getName())}, rpcClient
                             );
                             notMatchedMethod.setModifiers(Modifier.PUBLIC);
                             notMatchedMethod.setBody(
-                                    "{throw new UnsupportedOperationException(\"Not support method with no @RpcMethod\");}"
+                                    "{throw new UnsupportedOperationException(" +
+                                            "\"Not support method with @RpcMethod," +
+                                            " but metadata not find\");}"
                             );
                             rpcClient.addMethod(notMatchedMethod);
                         }
                     } else {
+                        //暂时不支持多参数的模式，多参数个人感觉没有啥子必要，因为都可以封装成一个请求来发送的，没有必要发送多个参数
+                        //所以这个地方暂时不考虑支持多参数的模式
                         CtClass[] parameters = new CtClass[parameterTypes.length];
                         for (int i = 0; i < parameterTypes.length; i++) {
                             parameters[i] = pool.get(parameterTypes[i].getName());
@@ -300,7 +285,7 @@ public class RpcClientGenerator {
                     }
                 }
 
-               // rpcClient.writeFile("/home/lee");
+                rpcClient.writeFile("/home/lee");
 
                 Class<?> target = rpcClient.toClass();
                 Object instance = target.getConstructor(clientProxy.getClass()).newInstance(clientProxy);
@@ -313,7 +298,7 @@ public class RpcClientGenerator {
 
                 return targetClass.cast(instance);
             } catch (Exception e) {
-                throw new RpcException("Can not ", e);
+                throw new RpcException("Can not generate proxy class for " + targetClass, e);
             } finally {
                 setterMethodMapping.clear();
             }
@@ -394,11 +379,12 @@ public class RpcClientGenerator {
                         metadata.getReturnType())
                 .append(parameterTypes.length <= 0 ? EMPTY : parameterTypes[0].getName(), metadata.getParameterType())
                 .isEquals()) {
-
-            //不存在就是用默认的
+            //方法签名都相等的话，这个时候默认就找到了和metadata对应上的方法了，那么就可以给当前接口添加方法了
             Serialization serialization = method.getDeclaredAnnotation(Serialization.class);
             if (serialization != null) {
                 try {
+                    //默认已经设置了一个返回值的解析器，如果我们没有使用@Serialization注解来显示的指定我们自己的解析器的话，那么
+                    //默认情况下就使用默认的，否则使用我们指定的
                     methodUnit.setReturnValueSerializer(serialization.value().getConstructor().newInstance());
                 } catch (Exception e) {
                     log.warn("Can not use serialization " + serialization.value(), e);
@@ -407,6 +393,7 @@ public class RpcClientGenerator {
 
             if (parameterTypes.length > 0) {
                 Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+                //参数只有一个，所以这个直接获取就可以了
                 Annotation[] annotations = parameterAnnotations[0];
                 if (annotations != null && annotations.length > 0) {
                     for (Annotation annotation : annotations) {
@@ -419,6 +406,7 @@ public class RpcClientGenerator {
                             } catch (Exception e) {
                                 log.warn("Can not use serialization " + parameterSer.value(), e);
                             }
+                            break;
                         }
                     }
                 }

@@ -3,6 +3,7 @@ package com.lee.rpc;
 import com.lee.rpc.annotation.RpcMethod;
 import com.lee.rpc.executor.GroupThreadFactory;
 import com.lee.rpc.executor.MultiThreadExecutor;
+import com.lee.rpc.executor.OverflowMode;
 import com.lee.rpc.executor.SingleThreadExecutor;
 import com.lee.rpc.helper.ExecutorHelper;
 import com.lee.rpc.helper.MethodIdGenerator;
@@ -45,11 +46,11 @@ public class RpcService {
     private String location;
 
     public void register(RpcMethod rpcMethod, Method method, Object instance, Class<?> inter) {
-        String group = rpcMethod.group();
+        String group = rpcMethod == null ? "default" : rpcMethod.group();
         byte methodId = idGenerator.generateId();
 
         //共享线程池模式
-        if (rpcMethod.sharedThreadPoolMode()) {
+        if (rpcMethod != null && rpcMethod.sharedThreadPoolMode()) {
             Executor executor = ExecutorHelper.obtainExecutor(group);
             if (executor == null) {
                 if (isSingleThread(rpcMethod)) {
@@ -72,28 +73,42 @@ public class RpcService {
                     )
             );
         } else {
-            if (isSingleThread(rpcMethod)) {
+            //接口上面的方法没有配置@RpcMethod, 默认也是一个Rpc提供的server
+            if (rpcMethod == null) {
                 allRpcMethod.put(methodId,
                         SERVER_GENERATOR.generate(
                                 inter, method, instance,
                                 new SingleThreadExecutor()
-                                        .withCapacity(rpcMethod.capacity())
-                                        .withOverflowMode(rpcMethod.overflowMode())
+                                        .withCapacity(10000)
+                                        .withOverflowMode(OverflowMode.DELAY)
                                         .withThreadFactory(threadFactory),
                                 methodId, group, serviceId
                         )
                 );
             } else {
-                allRpcMethod.put(methodId,
-                        SERVER_GENERATOR.generate(
-                                inter, method, instance,
-                                new MultiThreadExecutor(rpcMethod.minThread(), rpcMethod.maxThread())
-                                        .withCapacity(rpcMethod.capacity())
-                                        .withOverflowMode(rpcMethod.overflowMode())
-                                        .withThreadFactory(threadFactory),
-                                methodId, group, serviceId
-                        )
-                );
+                if (isSingleThread(rpcMethod)) {
+                    allRpcMethod.put(methodId,
+                            SERVER_GENERATOR.generate(
+                                    inter, method, instance,
+                                    new SingleThreadExecutor()
+                                            .withCapacity(rpcMethod.capacity())
+                                            .withOverflowMode(rpcMethod.overflowMode())
+                                            .withThreadFactory(threadFactory),
+                                    methodId, group, serviceId
+                            )
+                    );
+                } else {
+                    allRpcMethod.put(methodId,
+                            SERVER_GENERATOR.generate(
+                                    inter, method, instance,
+                                    new MultiThreadExecutor(rpcMethod.minThread(), rpcMethod.maxThread())
+                                            .withCapacity(rpcMethod.capacity())
+                                            .withOverflowMode(rpcMethod.overflowMode())
+                                            .withThreadFactory(threadFactory),
+                                    methodId, group, serviceId
+                            )
+                    );
+                }
             }
         }
     }

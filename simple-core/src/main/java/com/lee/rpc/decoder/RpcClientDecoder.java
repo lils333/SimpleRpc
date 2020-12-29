@@ -38,7 +38,6 @@ public class RpcClientDecoder extends LengthFieldBasedFrameDecoder {
 
     private static final RpcExceptionSerializer RPC_EXCEPTION_SERIALIZER = new RpcExceptionSerializer();
     private static final RpcMetadataSerializer SERIALIZER = new RpcMetadataSerializer();
-    private static final Object DUMMY = new Object();
     protected ClientProxy clientProxy;
     protected InetSocketAddress address;
 

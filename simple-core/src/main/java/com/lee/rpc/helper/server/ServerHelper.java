@@ -82,6 +82,8 @@ public class ServerHelper {
     }
 
     private static void registerRpcService() {
+        //同一个address，同一个serviceId，那么他们的RpcService里面的方法的ID可能会导致不一样，比如在不同的地方发布这个服务
+        //那么可能存在不同的methodId，为了保证顺序一致性，那么还是需要
         RPC_SERVER_WRAPPERS.stream().sorted().forEach(
                 rpcServerWrapper -> {
                     RpcService service = new RpcService();
@@ -95,12 +97,12 @@ public class ServerHelper {
                     Arrays.sort(declaredMethods, Comparator.comparingInt(o -> generateServiceId(o.toString())));
 
                     for (Method declaredMethod : declaredMethods) {
-                        RpcMethod rpcMethod = declaredMethod.getDeclaredAnnotation(RpcMethod.class);
-                        if (rpcMethod != null) {
-                            service.register(
-                                    rpcMethod, declaredMethod, rpcServerWrapper.instance, rpcServerWrapper.inter
-                            );
-                        }
+                        service.register(
+                                declaredMethod.getDeclaredAnnotation(RpcMethod.class),
+                                declaredMethod,
+                                rpcServerWrapper.instance,
+                                rpcServerWrapper.inter
+                        );
                     }
                     RpcHelper.registerServer(
                             createInetAddress(rpcServerWrapper.rpcServer.publish()), service
@@ -181,7 +183,14 @@ public class ServerHelper {
             if (wrapper == null || this == wrapper) {
                 return 1;
             }
-            return this.serviceId - wrapper.serviceId;
+            int i = this.serviceId - wrapper.serviceId;
+            if (i == 0) {
+                //默认情况下，就算同一个serviceId，同一个address, 他们的接口肯定是不一样的，也就是包级别下面的全限定类名，是不一样的
+                //因为一样就会导致冲突的，所以这个地方直接使用接口的名字来进行排序比较，这样在每一个平台上面他们的顺序就一致了
+                //就不存在方法名字不一样的情况了，因为只要保证了RpcService顺序一致，那么就保证了方法的顺序
+                return generateServiceId(inter.getName()) - generateServiceId(wrapper.inter.getName());
+            }
+            return i;
         }
 
         @Override

@@ -180,7 +180,8 @@ public class ClientProxy {
 
     private void initKetamaChannel() {
         if (!RpcHelper.isClientReady(serviceId)) {
-            //基于本地协议的就只有一个
+            //基于本地协议的就只有一个, 每一个@RpcClient标注的类，实际上就只是一个客户端而已，所以这个地方表面的意思是
+            //给予客户端去访问，也就是直接访问服务器的去获取metadata，本机访问对应着一个address
             try {
                 createChannelInternal(addresses.get(0), null).sync();
             } catch (InterruptedException e) {
@@ -189,7 +190,9 @@ public class ClientProxy {
                 throw new RpcException("Can not connect to address " + addresses.get(0), e);
             }
         } else {
-            //从已经注册的RpcServiceClientUnit里面去获取需要的weight信息
+            //从已经注册的RpcServiceClientUnit里面去获取需要的weight信息,因为在obtainMetadataFromZookeeper阶段就已经把
+            //Metadata的信息获取过来了，所以这个地方表面的意思就是走zookeeper的逻辑，当然如果是同一个serviceId对应的不同的方法
+            //在不同的地方初始化调用，也是会走和这个逻辑，因为同一个serviceId的metadata其实已经获取到客户端了
             RpcServiceClientUnit clientUnit = RpcHelper.getRpcClientUnit(serviceId);
 
             //有几个地方提供服务
@@ -325,7 +328,7 @@ public class ClientProxy {
                 } else {
                     log.warn("Can not reconnect to server, retry reconnect again later", future.cause());
 
-                    //2分钟以后，链接还是没有恢复，那么继续尝试建立连接
+                    //1分钟以后，链接还是没有恢复，那么继续尝试建立连接
                     newChannel.eventLoop().schedule(this, 1, TimeUnit.MINUTES);
                 }
             });
